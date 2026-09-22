@@ -228,3 +228,87 @@ for clase in range(10):
         f"Fitness clase {clase}: "
         f"{best_tree.fitness.values[0]:.4f}"
     )
+
+# comentar desde qui
+# Función para predecir usando los 10 modelos GP entrenados
+# def predict_ovr(models, X):
+#     predictions = []
+
+#     for sample in X:
+#         scores = []
+#         for clase in range(10):
+#             func = toolbox.compile(
+#                 expr=models[clase]
+#             )
+
+#             score = func(*sample)
+#             scores.append(score)
+
+#         predicted_class = np.argmax(scores)
+#         predictions.append(predicted_class)
+
+#     return np.array(predictions)
+
+# # Evaluación sobre datos
+# y_pred = predict_ovr(
+#     models,
+#     X_test_hog
+# )
+
+# # Calcular la precisión y el informe de clasificación
+# accuracy = accuracy_score(
+#     y_test,
+#     y_pred
+# )
+
+# print("Accuracy:", accuracy)
+
+# print(
+#     classification_report(
+#         y_test,
+#         y_pred
+#     )
+# )
+# descomentar hasta aqui
+
+#
+compiled_models = {
+    clase: toolbox.compile(expr=models[clase])
+    for clase in range(10)
+}
+
+# 
+def predict_ovr(compiled_models, X):
+
+    predictions = []
+
+    for sample in X:
+        scores = []
+        for clase in range(10):
+            score = compiled_models[clase](*sample)
+            scores.append(score)
+        predictions.append(
+            np.argmax(scores)
+        )
+
+    return np.array(predictions)
+
+y_pred = predict_ovr(
+    compiled_models,
+    X_test_hog
+)
+
+# Calcular la precisión y el informe de clasificación
+accuracy = accuracy_score(
+    y_test,
+    y_pred
+)
+
+print("Accuracyf:", accuracy)
+
+print(
+    classification_report(
+        y_test,
+        y_pred
+    )
+)
