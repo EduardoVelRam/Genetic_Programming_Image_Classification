@@ -56,8 +56,6 @@ X_train_hog = extract_hog_features(X_train)
 X_test_hog = extract_hog_features(X_test)
 
 
-
-
 # Se seleccionan 100 imágenes de cada clase 
 
 rng = np.random.default_rng(42)
@@ -80,9 +78,8 @@ print("y_gp:", y_gp.shape)
 
 print(np.bincount(y_gp))
 
-# ============================================================
+
 # Configuración de Programación Genética
-# ============================================================
 
 # Fitness: minimizar el error
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -99,11 +96,31 @@ pset = gp.PrimitiveSet("MAIN", n_features)
 # Operaciones aritméticas protegidas
 def protected_div(left, right):
     return left / right if abs(right) > 1e-6 else 1.0
+# Para evitar valores enormes, se cambia la división por:
+def protected_div(left, right):
+    if abs(right) < 1e-6:
+        return 1.0
+    result = left / right
+    if abs(result) > 1e6:
+        return np.sign(result) * 1e6
+    return result
 
+# Otras operaciones
+def protected_sqrt(x):
+    return np.sqrt(abs(x))
+def protected_log(x):
+    return np.log(abs(x) + 1e-6)
+
+# pset.addPrimitive(np.abs, 1)
+# pset.addPrimitive(np.sin, 1)
+# pset.addPrimitive(np.cos, 1)
+# pset.addPrimitive(np.tanh, 1)
 pset.addPrimitive(operator.add, 2)
 pset.addPrimitive(operator.sub, 2)
 pset.addPrimitive(operator.mul, 2)
 pset.addPrimitive(protected_div, 2)
+# pset.addPrimitive(protected_sqrt, 1)
+# pset.addPrimitive(protected_log, 1)
 
 # Crear toolbox
 toolbox = base.Toolbox()
@@ -207,6 +224,11 @@ def train_gp_ovr(target_class, X, y):
 
     return hof[0], logbook
 
+# best_individual = hof[0]
+
+# print("Mejor árbol:")
+# print(best_individual)
+
 # Se entrenan los 10 modelos GP.
 models = {}
 logs = {}
@@ -304,11 +326,44 @@ accuracy = accuracy_score(
     y_pred
 )
 
-print("Accuracyf:", accuracy)
+print("Ultima sección")
+# Comparación de fitness durante el entrenamiento y accuracy en el conjunto de prueba
+for clase in range(10):
 
-print(
-    classification_report(
-        y_test,
-        y_pred
+    func = compiled_models[clase]
+
+    scores = []
+
+    for sample in X_test_hog:
+        scores.append(func(*sample))
+
+    scores = np.array(scores)
+
+    y_true_binary = np.where(y_test == clase, 1, -1)
+    y_pred_binary = np.where(scores > 0, 1, -1)
+
+    bal_acc = balanced_accuracy_score(
+        y_true_binary,
+        y_pred_binary
     )
-)
+
+    print(
+        f"Clase {clase}: "
+        f"{bal_acc:.4f}"
+    )
+
+# 
+for clase in range(10):
+
+    scores = np.array([
+        compiled_models[clase](*sample)
+        for sample in X_test_hog
+    ])
+
+    print(
+        f"Clase {clase}: "
+        f"min={scores.min():.3f}, "
+        f"max={scores.max():.3f}, "
+        f"mean={scores.mean():.3f}, "
+        f"std={scores.std():.3f}"
+    )
