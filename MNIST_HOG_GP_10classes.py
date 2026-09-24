@@ -367,3 +367,78 @@ for clase in range(10):
         f"mean={scores.mean():.3f}, "
         f"std={scores.std():.3f}"
     )
+
+# Cálculo de parámetros de normalización
+# No usar los valores del conjunto de prueba, sino los del conjunto de entrenamiento (X_gp)
+score_stats = {}
+
+for clase in range(10):
+
+    func = compiled_models[clase]
+
+    scores_train = np.array([
+        func(*sample)
+        for sample in X_gp
+    ])
+
+    mean = np.mean(scores_train)
+    std = np.std(scores_train)
+
+    score_stats[clase] = {
+        "mean": mean,
+        "std": std
+    }
+
+    print(
+        f"Clase {clase}: "
+        f"mean={mean:.6f}, "
+        f"std={std:.6f}"
+    )
+
+# Normalizar los scores del conjunto de prueba
+def predict_ovr_normalized(compiled_models, score_stats, X):
+
+    predictions = []
+
+    for sample in X:
+
+        normalized_scores = []
+
+        for clase in range(10):
+
+            func = compiled_models[clase]
+
+            score = func(*sample)
+
+            mean = score_stats[clase]["mean"]
+            std = score_stats[clase]["std"]
+
+            if std > 1e-12:
+                normalized_score = (score - mean) / std
+            else:
+                normalized_score = 0.0
+
+            normalized_scores.append(normalized_score)
+
+        predicted_class = np.argmax(normalized_scores)
+
+        predictions.append(predicted_class)
+
+    return np.array(predictions)
+
+y_pred_normalized = predict_ovr_normalized(
+    compiled_models,
+    score_stats,
+    X_test_hog
+)
+
+
+accuracy_normalized = accuracy_score(
+    y_test,
+    y_pred_normalized
+)
+
+print(
+    "Accuracy con scores normalizados:",
+    accuracy_normalized
+)
