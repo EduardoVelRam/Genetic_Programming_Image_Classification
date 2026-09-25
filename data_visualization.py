@@ -31,6 +31,7 @@ y_test = idx2numpy.convert_from_file(
     str(path / "t10k-labels-idx1-ubyte" / "t10k-labels-idx1-ubyte")
 )
 
+print("Este es el código data_visualization.py")
 print("X_train:", X_train.shape)
 print("y_train:", y_train.shape)
 
@@ -59,6 +60,7 @@ plt.tight_layout()
 
 # print(X_train[0])
 
+# Distribución de clases
 classes, counts = np.unique(y_train, return_counts=True)
 plt.figure(figsize=(8, 5))
 plt.bar(classes, counts)
@@ -109,6 +111,14 @@ class_names = [
     "Ankle boot"
 ]
 
+classes, counts = np.unique(y_train_fashion, return_counts=True)
+plt.figure(figsize=(8, 5))
+plt.bar(classes, counts)
+plt.xlabel("Clase")
+plt.ylabel("Número de imágenes")
+plt.title("Distribución de clases - Fashion MNIST")
+plt.xticks(classes)
+
 plt.figure(figsize=(10, 4))
 
 for i in range(10):
@@ -127,7 +137,7 @@ plt.tight_layout()
 # plt.show()
 
 # HOG (Histogram of Oriented Gradients) feature extraction
-imagen = X_train[0]
+imagen = X_train_fashion[9]
 
 features, hog_image = hog(
     imagen,
@@ -152,7 +162,7 @@ axes[1].axis("off")
 
 plt.tight_layout()
 
-#plt.show()
+plt.show()
 
 # Hiperparámetros de HOG
 hog(
